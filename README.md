@@ -1,6 +1,6 @@
 # atom-alignment package
 
-[Atom package](https://atom.io/packages/alignment)
+[Atom package](https://atom.io/packages/atom-alignment)
 
 > Inspired by sublime text plugin ([sublime_alignment](https://github.com/wbond/sublime_alignment))
 
