@@ -1,0 +1,18 @@
+{
+  "name": "atom-alignment",
+  "main": "./lib/atom-alignment",
+  "version": "0.0.0",
+  "private": true,
+  "description": "A short description of your package",
+  "activationEvents": [
+    "atom-alignment:align"
+  ],
+  "repository": "https://github.com/atom/atom-alignment",
+  "license": "MIT",
+  "engines": {
+    "atom": ">0.50.0"
+  },
+  "dependencies": {
+    "season": "~1.0.2"
+  }
+}
