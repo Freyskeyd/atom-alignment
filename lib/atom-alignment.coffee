@@ -38,18 +38,19 @@ alignLines = (editor) ->
                     splitedString = a.split(matched)
 
                     if splitedString.length > 1
+                        splitedString[0] = splitedString[0].replace(/\s+$/g, '')
                         # Detection of max in this range
                         max = if max < splitedString[0].length then splitedString[0].length else max
 
                 if max and matched
                     # add space to better looking
-                    max = max + 1
+                    max = max + 2
 
                     textLines.forEach (a, b) ->
                         splitedString = a.split(matched)
                         if splitedString.length > 1
                             # Remove un needed space
-                            splitedString[0].replace(/\s+$/g, '')
+                            splitedString[0] = splitedString[0].replace(/\s+$/g, '')
                             diff = max - splitedString[0].length
 
                             if diff > 0
