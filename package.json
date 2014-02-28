@@ -1,13 +1,13 @@
 {
   "name": "atom-alignment",
   "main": "./lib/atom-alignment",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
-  "description": "A short description of your package",
+  "description": "A simple key-binding for aligning multi-line and multiple selections in Atom",
   "activationEvents": [
     "atom-alignment:align"
   ],
-  "repository": "https://github.com/atom/atom-alignment",
+  "repository": "https://github.com/Freyskeyd/atom-alignment",
   "license": "MIT",
   "engines": {
     "atom": ">0.50.0"
