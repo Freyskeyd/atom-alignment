@@ -1,7 +1,7 @@
 {
   "name": "atom-alignment",
   "main": "./lib/atom-alignment",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "private": true,
   "description": "A simple key-binding for aligning multi-line and multiple selections in Atom",
   "activationEvents": [
