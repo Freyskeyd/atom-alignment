@@ -1,6 +1,6 @@
 Aligner = require './aligner'
 
-matcher = [':', '=']
+matcher = ['=', ':']
 
 module.exports =
     activate: ->
