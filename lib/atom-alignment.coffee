@@ -15,47 +15,52 @@ alignLines = (editor) ->
     # If selected lines
     if alignableLines
         # For each range
+        max = 0
+        matched = null
         alignableLines.forEach (range) ->
 
-            max = 0
-            matched = null
 
             # Split lines
             textLines = editor.getTextInBufferRange(range).split("\n")
 
             # If we have more one line
-            unless textLines.length < 2
+            textLines.forEach (a, b) ->
+                # If no matcher has be set for the moment
+                # We try to take on
+                unless matched
+                    matcher.forEach (possibleMatcher) ->
+                        unless matched
+                            if (a.indexOf possibleMatcher, 0) isnt -1
+                                matched = possibleMatcher
+
+                splitedString = a.split(matched)
+
+                if splitedString.length > 1
+                    splitedString[0] = splitedString[0].replace(/\s+$/g, '')
+                    # Detection of max in this range
+                    max = if max < splitedString[0].length then splitedString[0].length else max
+        max = max + 2
+
+        alignableLines.forEach (range) ->
+
+            textLines = editor.getTextInBufferRange(range).split("\n")
+
+            if max and matched
+                # add space to better looking
 
                 textLines.forEach (a, b) ->
-                    # If no matcher has be set for the moment
-                    # We try to take on
-                    unless matched
-                        matcher.forEach (possibleMatcher) ->
-                            unless matched
-                                if (a.indexOf possibleMatcher, 0) isnt -1
-                                    matched = possibleMatcher
-
                     splitedString = a.split(matched)
-
                     if splitedString.length > 1
+                        # Remove un needed space
                         splitedString[0] = splitedString[0].replace(/\s+$/g, '')
-                        # Detection of max in this range
-                        max = if max < splitedString[0].length then splitedString[0].length else max
+                        diff = max - splitedString[0].length
 
-                if max and matched
-                    # add space to better looking
-                    max = max + 2
+                        if diff > 0
+                            splitedString[0] = splitedString[0] + Array(diff).join(' ')
 
-                    textLines.forEach (a, b) ->
-                        splitedString = a.split(matched)
-                        if splitedString.length > 1
-                            # Remove un needed space
-                            splitedString[0] = splitedString[0].replace(/\s+$/g, '')
-                            diff = max - splitedString[0].length
+                        if (splitedString[1] && splitedString[1].charAt(0) != ' ')
+                            splitedString[1] = ' ' + splitedString[1]
 
-                            if diff > 0
-                                splitedString[0] = splitedString[0] + Array(diff).join(' ')
+                        textLines[b] = splitedString.join(matched)
 
-                            textLines[b] = splitedString.join(matched)
-
-                    editor.setTextInBufferRange(range, textLines.join('\n'));
+                editor.setTextInBufferRange(range, textLines.join('\n'));
