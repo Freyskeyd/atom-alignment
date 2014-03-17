@@ -7,8 +7,41 @@
 
 ## Usage
 
-A simple key-binding for aligning multi-line and multiple selections in Atom
+A simple key-binding for aligning multi-line and multiple selections in Atom.
 
+use `ctrl+cmd+a` (like sublime text)
+
+```javascript
+var a = b;
+var ab = c;
+var abcd = d;
+var ddddd =d;
+```
+
+```javascript
+var a     = b;
+var ab    = c;
+var abcd  = d;
+var ddddd = d;
+```
+
+On multiple range line
+
+```javascript
+var a = b;
+var ab = c;
+var notMePlease='NOOOO';
+var abcd = d;
+var ddddd =d;
+```
+
+```javascript
+var a     = b;
+var ab    = c;
+var notMePlease='NOOOO';
+var abcd  = d;
+var ddddd = d;
+```
 
 ## License
 
