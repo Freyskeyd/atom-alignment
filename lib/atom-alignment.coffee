@@ -46,7 +46,6 @@ alignLines = (editor) ->
             textLines = editor.getTextInBufferRange(range).split("\n")
 
             if max and matched
-                # add space to better looking
 
                 textLines.forEach (a, b) ->
                     splitedString = a.split(matched)
@@ -59,7 +58,7 @@ alignLines = (editor) ->
                             splitedString[0] = splitedString[0] + Array(diff).join(' ')
 
                         if (splitedString[1] && splitedString[1].charAt(0) != ' ')
-                            splitedString[1] = ' ' + splitedString[1]
+                            splitedString[1] = splitedString[1]
 
                         textLines[b] = splitedString.join(matched)
 
