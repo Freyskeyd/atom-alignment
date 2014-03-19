@@ -1,7 +1,7 @@
 {
   "name": "atom-alignment",
   "main": "./lib/atom-alignment",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "private": true,
   "description": "A simple key-binding for aligning multi-line and multiple selections in Atom (Based on the sublime text plugin)",
   "activationEvents": [
