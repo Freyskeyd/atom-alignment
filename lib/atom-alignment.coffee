@@ -3,6 +3,9 @@ Aligner = require './aligner'
 matcher = ['=', ':']
 
 module.exports =
+    configDefaults:
+        alignmentSpaceChars: ['=', ':']
+
     activate: ->
         atom.workspaceView.command 'atom-alignment:align', '.editor', ->
             editor = atom.workspaceView.getActivePaneItem()
@@ -11,6 +14,7 @@ module.exports =
 
 alignLines = (editor) ->
 
+    spaceChars     = atom.config.get('atom-alignment.alignmentSpaceChars')
     alignableLines = Aligner.alignFor editor
     # If selected lines
     if alignableLines
@@ -39,7 +43,9 @@ alignLines = (editor) ->
                     splitedString[0] = splitedString[0].replace(/\s+$/g, '')
                     # Detection of max in this range
                     max = if max < splitedString[0].length then splitedString[0].length else max
-        max = max + 2
+
+        addSpacePrefix = spaceChars.indexOf(matched) > -1
+        max            = max + if addSpacePrefix then 2 else 1;
 
         alignableLines.forEach (range) ->
 
