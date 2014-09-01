@@ -8,7 +8,7 @@ module.exports =
 
     activate: ->
         atom.workspaceView.command 'atom-alignment:align', '.editor', ->
-            editor = atom.workspaceView.getActivePaneItem()
+            editor = atom.workspace.getActivePaneItem()
             alignLines editor
 
 
