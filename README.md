@@ -1,4 +1,4 @@
-**This repository IS NOT MAINTAINED ANYMORE**
+# **This repository IS NOT MAINTAINED ANYMORE**
 
 # atom-alignment package
 
