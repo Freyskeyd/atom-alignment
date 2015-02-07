@@ -1,3 +1,5 @@
+*This repository IS NOT MAINTAINED ANYMORE*
+
 # atom-alignment package
 
 [Atom package](https://atom.io/packages/atom-alignment)
