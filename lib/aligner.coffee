@@ -9,6 +9,7 @@ module.exports =
 
         # Public
         constructor: (@editor) ->
+            @mode = if @editor.cursors.length > 1 then "cursors" else "selection"
 
         # Public
         lines: ->
@@ -18,9 +19,16 @@ module.exports =
                     @sortableRangeFrom(selectionRange)
 
         # Internal
-        selectionRanges: ->
-            @editor.getSelectedBufferRanges().filter (range) ->
-                not range.isEmpty()
+        selectionRanges: =>
+            if (@mode == "cursors")
+                ranges = []
+                for cursor in @editor.cursors
+                    range = cursor.getCurrentLineBufferRange()
+                    ranges.push range if not range.isEmpty()
+                return ranges
+            else
+                @editor.getSelectedBufferRanges().filter (range) ->
+                    not range.isEmpty()
 
         # Internal
         sortableRangeForEntireBuffer: ->
