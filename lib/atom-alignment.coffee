@@ -7,24 +7,28 @@ module.exports =
             default: ['=', ':']
             items:
                 type: "string"
-            description: "add space in front of the character (a=1 > a =1)"
+            description: "insert space in front of the character (a=1 > a =1)"
         alignBy:
             type: 'array'
-            default: [':=', '=', ':']
+            default: [':=', ':', '=']
             items:
                 type: "string"
-            description: "consider the order, the left most matching character(s) will taken to compute the alignment"
+            description: "consider the order, the left most matching value is taken to compute the alignment"
+        trimRight:
+            type: 'boolean'
+            default: false
+            description: "also trim the right part of the variable after the matching character"
 
-    activate: ->
+    activate: (state) ->
         atom.workspaceView.command 'atom-alignment:align', '.editor', ->
             editor = atom.workspace.getActivePaneItem()
             alignLines editor
 
 
 alignLines = (editor) ->
-
-    spaceChars     = atom.config.get('atom-alignment.alignmentSpaceChars')
-    matcher        = atom.config.get('atom-alignment.alignBy')
+    spaceChars     = atom.config.get 'atom-alignment.alignmentSpaceChars'
+    matcher        = atom.config.get 'atom-alignment.alignBy'
+    trimRight      = atom.config.get 'atom-alignment.trimRight'
     alignableLines = Aligner.alignFor editor
     # If selected lines
     if alignableLines
@@ -46,12 +50,12 @@ alignLines = (editor) ->
                             if (a.indexOf possibleMatcher, 0) isnt -1
                                 matched = possibleMatcher
 
-                splitedString = a.split(matched)
+                splitString = a.split(matched)
 
-                if splitedString.length > 1
-                    splitedString[0] = splitedString[0].replace(/\s+$/g, '')
+                if splitString.length > 1
+                    splitString[0] = splitString[0].replace(/\s+$/g, '')
                     # Detection of max in this range
-                    max = if max < splitedString[0].length then splitedString[0].length else max
+                    max = if max < splitString[0].length then splitString[0].length else max
 
         addSpacePrefix = spaceChars.indexOf(matched) > -1
         max            = max + if addSpacePrefix then 2 else 1
@@ -60,18 +64,21 @@ alignLines = (editor) ->
             textLines = editor.getTextInBufferRange(range).split("\n")
             if max and matched
                 textLines.forEach (a, b) ->
-                    splitedString = a.split(matched)
-                    if splitedString.length > 1
+                    splitString = a.split(matched)
+                    if splitString.length > 1
                         # Remove un needed space
-                        splitedString[0] = splitedString[0].replace(/\s+$/g, '')
-                        diff = max - splitedString[0].length
+                        splitString[0] = splitString[0].replace(/\s+$/g, '')
+                        diff = max - splitString[0].length
 
                         if diff > 0
-                            splitedString[0] = splitedString[0] + Array(diff).join(' ')
+                            splitString[0] = splitString[0] + Array(diff).join(' ')
 
-                        if (splitedString[1] && splitedString[1].charAt(0) != ' ')
-                            splitedString[1] = splitedString[1]
+                        if (splitString[1] && splitString[1].charAt(0) != ' ')
+                            splitString[1] = splitString[1]
 
-                        textLines[b] = splitedString.join(matched)
+                        if trimRight
+                            splitString[1] = if addSpacePrefix then " "+splitString[1].trim() else splitString[1].trim()
+
+                        textLines[b] = splitString.join(matched)
 
                 editor.setTextInBufferRange(range, textLines.join('\n'))
