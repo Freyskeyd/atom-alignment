@@ -20,7 +20,7 @@ module.exports =
             description: "also trim the right part of the variable after the matching character"
 
     activate: (state) ->
-        atom.workspaceView.command 'atom-alignment:align', '.editor', ->
+        atom.commands.add 'atom-workspace', 'atom-alignment:align', ->
             editor = atom.workspace.getActivePaneItem()
             alignLines editor
 
