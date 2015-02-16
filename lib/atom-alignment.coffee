@@ -1,10 +1,19 @@
 Aligner = require './aligner'
 
-matcher = ['=', ':']
-
 module.exports =
-    configDefaults:
-        alignmentSpaceChars: ['=', ':']
+    config:
+        alignmentSpaceChars:
+            type: 'array'
+            default: ['=', ':']
+            items:
+                type: "string"
+            description: "add space in front of the character (a=1 > a =1)"
+        alignBy:
+            type: 'array'
+            default: [':=', '=', ':']
+            items:
+                type: "string"
+            description: "consider the order, the left most matching character(s) will taken to compute the alignment"
 
     activate: ->
         atom.workspaceView.command 'atom-alignment:align', '.editor', ->
@@ -15,14 +24,14 @@ module.exports =
 alignLines = (editor) ->
 
     spaceChars     = atom.config.get('atom-alignment.alignmentSpaceChars')
+    matcher        = atom.config.get('atom-alignment.alignBy')
     alignableLines = Aligner.alignFor editor
     # If selected lines
     if alignableLines
         # For each range
-        max = 0
+        max     = 0
         matched = null
         alignableLines.forEach (range) ->
-
 
             # Split lines
             textLines = editor.getTextInBufferRange(range).split("\n")
@@ -45,14 +54,11 @@ alignLines = (editor) ->
                     max = if max < splitedString[0].length then splitedString[0].length else max
 
         addSpacePrefix = spaceChars.indexOf(matched) > -1
-        max            = max + if addSpacePrefix then 2 else 1;
+        max            = max + if addSpacePrefix then 2 else 1
 
         alignableLines.forEach (range) ->
-
             textLines = editor.getTextInBufferRange(range).split("\n")
-
             if max and matched
-
                 textLines.forEach (a, b) ->
                     splitedString = a.split(matched)
                     if splitedString.length > 1
@@ -68,4 +74,4 @@ alignLines = (editor) ->
 
                         textLines[b] = splitedString.join(matched)
 
-                editor.setTextInBufferRange(range, textLines.join('\n'));
+                editor.setTextInBufferRange(range, textLines.join('\n'))
