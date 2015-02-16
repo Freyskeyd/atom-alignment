@@ -73,9 +73,6 @@ alignLines = (editor) ->
                         if diff > 0
                             splitString[0] = splitString[0] + Array(diff).join(' ')
 
-                        if (splitString[1] && splitString[1].charAt(0) != ' ')
-                            splitString[1] = splitString[1]
-
                         if trimRight
                             splitString[1] = if addSpacePrefix then " "+splitString[1].trim() else splitString[1].trim()
 

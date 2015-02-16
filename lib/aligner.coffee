@@ -9,7 +9,12 @@ module.exports =
 
         # Public
         constructor: (@editor) ->
-            @mode = if @editor.cursors.length > 1 then "cursors" else "selection"
+            cursors = @editor.getCursors()
+            cnt = 0
+            for cursor in cursors
+                cnt += 1 if cursor.visible
+
+            @mode = if cnt > 1 then "cursors" else "selection"
 
         # Public
         lines: ->
