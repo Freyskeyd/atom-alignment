@@ -45,21 +45,31 @@ module.exports =
                 matched = null
                 idx = -1
                 @rows.forEach (o) =>
-                    line = o.text
-                    unless matched
-                        @matcher.forEach (possibleMatcher) ->
-                            unless matched
-                                if (line.indexOf(possibleMatcher, startPos) != -1)
-                                    matched = possibleMatcher
-                            return
+                    if !o.done
+                        line = o.text
+                        unless matched
+                            @matcher.forEach (possibleMatcher) ->
+                                unless matched
+                                    if (line.indexOf(possibleMatcher, startPos) != -1)
+                                        matched = possibleMatcher
+                                return
 
-                    if matched
-                        idx = line.indexOf(matched, startPos)
-                        if (idx) isnt -1
-                            splitString = [line.substring(0,idx).replace(/\s+$/g, ''), line.substring(++idx)]
-                            o.splited = splitString
-                            # Detection of max in this range
-                            max = if max < splitString[0].length then splitString[0].length else max
+                        if matched
+                            idx = line.indexOf(matched, startPos)
+                            if (idx) isnt -1
+                                splitString = [line.substring(0,idx).replace(/\s+$/g, ''), line.substring(++idx)]
+                                o.splited = splitString
+                                # Detection of max in this range
+                                max = if max < splitString[0].length then splitString[0].length else max
+
+                            found = false
+                            @matcher.forEach (possibleMatcher) ->
+                                unless found
+                                    if (line.indexOf(possibleMatcher, idx+1) != -1)
+                                        found = true
+                                return
+
+                            o.stop = !found
 
                     return
 
@@ -68,7 +78,7 @@ module.exports =
                     max            = max + if addSpacePrefix then 2 else 1
 
                     @rows.forEach (o) =>
-                        if o.splited and matched
+                        if !o.done and o.splited and matched
                             splitString = o.splited
 
                             diff = max - splitString[0].length
@@ -80,6 +90,7 @@ module.exports =
                                 splitString[1] = if addSpacePrefix then " "+splitString[1].trim() else splitString[1].trim()
 
                             o.text = splitString.join(matched)
+                            o.done = o.stop
                         return
                 return max
             else
