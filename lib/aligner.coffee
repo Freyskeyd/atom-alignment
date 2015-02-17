@@ -1,81 +1,117 @@
 {Range} = require 'atom'
 
+_ = require 'lodash'
+
 module.exports =
     class Aligner
         # Public
         constructor: (@editor, @spaceChars, @matcher, @trimRight) ->
-            @lineNums = []
-            cursors = @editor.getCursors()
-            cnt = 0
-            for cursor in cursors
-                cnt += 1 if cursor.visible
+            rowNums = []
+            @rows = []
+            cursors = _.filter @editor.getCursors(), (cursor) ->
+                row = cursor.getBufferRow()
+                if cursor.visible && !_.contains(rowNums, row)
+                    rowNums.push(row)
+                    return true
 
-            if (cnt > 1)
+            if (cursors.length > 1)
+                @mode = "cursor"
                 for cursor in cursors
-                    @lineNums.push(cursor.getBufferRow())
+                    row = cursor.getBufferRow()
+                    o =
+                        text   : cursor.getCurrentBufferLine()
+                        length : @editor.lineLengthForBufferRow(row)
+                        row   : row
+                        column : cursor.getBufferColumn()
+                    @rows.push (o)
             else
+                @mode = "default"
                 ranges = @editor.getSelectedBufferRanges()
                 for range in ranges
-                    @lineNums = @lineNums.concat(range.getRows())
-                    @lineNums.pop() if range.end.column == 0
+                    rowNums = rowNums.concat(range.getRows())
+                    rowNums.pop() if range.end.column == 0
 
-            @lines = []
-            for line in @lineNums
-                o =
-                    text   : @editor.lineTextForBufferRow(line)
-                    length : @editor.lineLengthForBufferRow(line)
-                    line   : line
-                @lines.push (o)
+                for row in rowNums
+                    o =
+                        text   : @editor.lineTextForBufferRow(row)
+                        length : @editor.lineLengthForBufferRow(row)
+                        row   : row
+                    @rows.push (o)
 
         # Private
-        __computeLines: (startPos) =>
-            if @lines.length > 0
-                max     = 0
-                maxParts = []
+        __computeRows: (startPos) =>
+            max = 0
+            if @rows.length > 0 && @mode == "default"
                 matched = null
-                @lines.forEach (o) =>
+                idx = -1
+                @rows.forEach (o) =>
                     line = o.text
                     unless matched
                         @matcher.forEach (possibleMatcher) ->
                             unless matched
-                                if (line.indexOf possibleMatcher, startPos) isnt -1
+                                if (line.indexOf(possibleMatcher, startPos) != -1)
                                     matched = possibleMatcher
                             return
 
-                    splitString = line.split(matched)
+                    if matched
+                        idx = line.indexOf(matched, startPos)
+                        if (idx) isnt -1
+                            splitString = [line.substring(0,idx).replace(/\s+$/g, ''), line.substring(++idx)]
+                            o.splited = splitString
+                            # Detection of max in this range
+                            max = if max < splitString[0].length then splitString[0].length else max
 
-                    if splitString.length > 1
-                        splitString[0] = splitString[0].replace(/\s+$/g, '')
-                        # Detection of max in this range
-                        max = if max < splitString[0].length then splitString[0].length else max
                     return
 
                 if (max > 0)
                     addSpacePrefix = @spaceChars.indexOf(matched) > -1
                     max            = max + if addSpacePrefix then 2 else 1
 
-                    @lines.forEach (o) =>
-                        line = o.text
-                        if max and matched
-                            splitString = line.split(matched)
-                            if splitString.length > 1
-                                # Remove un needed space
-                                splitString[0] = splitString[0].replace(/\s+$/g, '')
-                                diff = max - splitString[0].length
+                    @rows.forEach (o) =>
+                        if o.splited and matched
+                            splitString = o.splited
 
-                                if diff > 0
-                                    splitString[0] = splitString[0] + Array(diff).join(' ')
+                            diff = max - splitString[0].length
 
-                                if @trimRight
-                                    splitString[1] = if addSpacePrefix then " "+splitString[1].trim() else splitString[1].trim()
+                            if diff > 0
+                                splitString[0] = splitString[0] + Array(diff).join(' ')
 
-                                o.text = splitString.join(matched)
+                            if @trimRight
+                                splitString[1] = if addSpacePrefix then " "+splitString[1].trim() else splitString[1].trim()
+
+                            o.text = splitString.join(matched)
                         return
-            return max
+                return max
+            else
+                @rows.forEach (o) ->
+                    max = if max < o.column then o.column else max
 
+                max++
+
+                @rows.forEach (o) =>
+                    line = o.text
+                    splitString = [line.substring(0,o.column).replace(/\s+$/g, ''), line.substring(o.column)]
+
+                    diff = max - splitString[0].length
+
+                    if diff > 0
+                        splitString[0] = splitString[0] + Array(diff).join(' ')
+
+                    if @trimRight
+                        splitString[1] = splitString[1][0]+splitString[1].substring(1).trim()
+
+                    o.text = splitString.join("")
+
+                return 0
         # Public
-        align: =>
-            @__computeLines(0)
+        align: (multiple) =>
+            if multiple
+                found = 0
+                loop
+                    found = @__computeRows(found)
+                    break if found == 0
+            else
+                @__computeRows(0)
 
-            @lines.forEach (o) =>
-                @editor.setTextInBufferRange([[o.line, 0],[o.line, o.length]], o.text)
+            @rows.forEach (o) =>
+                @editor.setTextInBufferRange([[o.row, 0],[o.row, o.length]], o.text)

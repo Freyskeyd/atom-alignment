@@ -10,5 +10,7 @@
 
 '.platform-darwin atom-text-editor':
     'ctrl-cmd-a': 'atom-alignment:align'
+    'ctrl-shift-a': 'atom-alignment:alignMultiple'
 '.platform-win32 atom-text-editor, .platform-linux atom-text-editor':
     'ctrl-alt-a': 'atom-alignment:align'
+    'ctrl-shift-a': 'atom-alignment:alignMultiple'

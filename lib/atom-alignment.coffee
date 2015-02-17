@@ -20,14 +20,27 @@ module.exports =
             description: "also trim the right part of the variable after the matching character"
 
     activate: (state) ->
-        atom.commands.add 'atom-workspace', 'atom-alignment:align', ->
-            editor = atom.workspace.getActivePaneItem()
-            alignLines editor
+        atom.commands.add 'atom-workspace',
+            'atom-alignment:align': ->
+                editor = atom.workspace.getActivePaneItem()
+                alignLines editor
 
+            'atom-alignment:alignMultiple': ->
+                editor = atom.workspace.getActivePaneItem()
+                alignLinesMultiple editor
 
 alignLines = (editor) ->
     spaceChars     = atom.config.get 'atom-alignment.alignmentSpaceChars'
     matcher        = atom.config.get 'atom-alignment.alignBy'
     trimRight      = atom.config.get 'atom-alignment.trimRight'
     a = new Aligner(editor, spaceChars, matcher, trimRight)
-    a.align()
+    a.align(false)
+    return
+
+alignLinesMultiple = (editor) ->
+    spaceChars     = atom.config.get 'atom-alignment.alignmentSpaceChars'
+    matcher        = atom.config.get 'atom-alignment.alignBy'
+    trimRight      = atom.config.get 'atom-alignment.trimRight'
+    a = new Aligner(editor, spaceChars, matcher, trimRight)
+    a.align(true)
+    return
