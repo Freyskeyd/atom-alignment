@@ -20,7 +20,7 @@ module.exports =
                     row = cursor.getBufferRow()
                     o =
                         text   : cursor.getCurrentBufferLine()
-                        length : @editor.lineLengthForBufferRow(row)
+                        length : @editor.lineTextForBufferRow(row).length
                         row   : row
                         column : cursor.getBufferColumn()
                     @rows.push (o)
@@ -33,7 +33,7 @@ module.exports =
                 for row in rowNums
                     o =
                         text   : @editor.lineTextForBufferRow(row)
-                        length : @editor.lineLengthForBufferRow(row)
+                        length : @editor.lineTextForBufferRow(row).length
                         row   : row
                     @rows.push (o)
 
