@@ -70,15 +70,16 @@ module.exports =
                             if @mode == "break"
                                 c = ""
                                 blankPos = -1
-                                quotationMark = doubleQuotationMark = backslash = charFound = false
+                                quotationMark = doubleQuotationMark = 0
+                                backslash = charFound = false
                                 loop
                                     break if c == undefined
                                     c = line[++idx]
-                                    quotationMark = if c == "'" and !quotationMark and !backslash then true else false
-                                    doubleQuotationMark = if c == "'" and !doubleQuotationMark and !backslash then true else false
+                                    if c == "'" and !backslash then quotationMark++
+                                    if c == '"' and !backslash then doubleQuotationMark++
                                     backslash = if c == "\\" and !backslash then true else false
                                     charFound = if c != " " and !charFound then true else charFound
-                                    if c == " " and !quotationMark and !doubleQuotationMark and charFound
+                                    if c == " " and quotationMark % 2 == 0 and doubleQuotationMark % 2 == 0 and charFound
                                         blankPos = idx
                                         break
 
