@@ -41,8 +41,11 @@ module.exports =
 
             if @mode != "cursor"
                 @rows.forEach (o) =>
-                    firstCharPos  = o.text.length-o.text.trimLeft().length
-                    o.text        = Array(firstCharPos).join(" ")+" "+o.text.substring(firstCharPos).replace(/\s{2,}/g, ' ')
+                    if o.text[0] == " "
+                        firstCharPos  = o.text.length-o.text.trimLeft().length
+                        o.text        = Array(firstCharPos).join(" ")+" "+o.text.substring(firstCharPos).replace(/\s{2,}/g, ' ')
+                    else
+                        o.text        = o.text.replace(/\s{2,}/g, ' ')
 
         # Private
         __computeRows: (startPos) =>
