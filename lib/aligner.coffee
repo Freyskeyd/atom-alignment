@@ -21,7 +21,7 @@ module.exports =
                     o =
                         text   : cursor.getCurrentBufferLine()
                         length : @editor.lineTextForBufferRow(row).length
-                        row   : row
+                        row    : row
                         column : cursor.getBufferColumn()
                     @rows.push (o)
             else
@@ -34,14 +34,15 @@ module.exports =
                     o =
                         text   : @editor.lineTextForBufferRow(row)
                         length : @editor.lineTextForBufferRow(row).length
-                        row   : row
+                        row    : row
                     @rows.push (o)
 
                 @mode = if @rows.length > 1 then "default" else "single"
 
             if @mode != "cursor"
                 @rows.forEach (o) =>
-                    o.text = o.text.replace(/\s{2,}/g, ' ')
+                    firstCharPos  = o.text.length-o.text.trimLeft().length
+                    o.text        = Array(firstCharPos).join(" ")+" "+o.text.substring(firstCharPos).replace(/\s{2,}/g, ' ')
 
         # Private
         __computeRows: (startPos) =>
