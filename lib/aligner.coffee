@@ -6,8 +6,11 @@ module.exports =
     class Aligner
         # Public
         constructor: (@editor, @spaceChars, @matcher, @addSpacePostfix) ->
-            rowNums = []
             @rows = []
+
+        # Private
+        __getRows: =>
+            rowNums = []
             cursors = _.filter @editor.getCursors(), (cursor) ->
                 row = cursor.getBufferRow()
                 if cursor.visible && !_.contains(rowNums, row)
@@ -40,14 +43,13 @@ module.exports =
                 @mode = if @rows.length > 1 then "default" else "single"
 
             if @mode != "cursor"
-                @rows.forEach (o) =>
+                @rows.forEach (o) ->
                     if o.text[0] == " "
                         firstCharPos  = o.text.length-o.text.trimLeft().length
                         o.text        = Array(firstCharPos).join(" ")+" "+o.text.substring(firstCharPos).replace(/\s{2,}/g, ' ')
                     else
                         o.text        = o.text.replace(/\s{2,}/g, ' ')
 
-        # Private
         __computeRows: (startPos) =>
             max = 0
             if @mode == "default" || @mode == "single" || @mode == "break"
@@ -130,7 +132,7 @@ module.exports =
 
                 max++
 
-                @rows.forEach (o) =>
+                @rows.forEach (o) ->
                     line = o.text
                     splitString = [line.substring(0,o.column), line.substring(o.column)]
 
@@ -146,6 +148,7 @@ module.exports =
                 return 0
         # Public
         align: (multiple) =>
+            @__getRows()
             if @mode == "single" && multiple
                 @mode = "break"
 
