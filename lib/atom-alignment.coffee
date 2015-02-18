@@ -14,10 +14,10 @@ module.exports =
             items:
                 type: "string"
             description: "consider the order, the left most matching value is taken to compute the alignment"
-        trimRight:
+        addSpacePostfix:
             type: 'boolean'
             default: false
-            description: "also trim the right part of the variable after the matching character"
+            description: "insert space after the matching character (a=1 > a =1)"
 
     activate: (state) ->
         atom.commands.add 'atom-workspace',
@@ -32,15 +32,15 @@ module.exports =
 alignLines = (editor) ->
     spaceChars     = atom.config.get 'atom-alignment.alignmentSpaceChars'
     matcher        = atom.config.get 'atom-alignment.alignBy'
-    trimRight      = atom.config.get 'atom-alignment.trimRight'
-    a = new Aligner(editor, spaceChars, matcher, trimRight)
+    addSpacePostfix      = atom.config.get 'atom-alignment.addSpacePostfix'
+    a = new Aligner(editor, spaceChars, matcher, addSpacePostfix)
     a.align(false)
     return
 
 alignLinesMultiple = (editor) ->
     spaceChars     = atom.config.get 'atom-alignment.alignmentSpaceChars'
     matcher        = atom.config.get 'atom-alignment.alignBy'
-    trimRight      = atom.config.get 'atom-alignment.trimRight'
-    a = new Aligner(editor, spaceChars, matcher, trimRight)
+    addSpacePostfix      = atom.config.get 'atom-alignment.addSpacePostfix'
+    a = new Aligner(editor, spaceChars, matcher, addSpacePostfix)
     a.align(true)
     return

@@ -5,7 +5,7 @@ _ = require 'lodash'
 module.exports =
     class Aligner
         # Public
-        constructor: (@editor, @spaceChars, @matcher, @trimRight) ->
+        constructor: (@editor, @spaceChars, @matcher, @addSpacePostfix) ->
             rowNums = []
             @rows = []
             cursors = _.filter @editor.getCursors(), (cursor) ->
@@ -25,7 +25,6 @@ module.exports =
                         column : cursor.getBufferColumn()
                     @rows.push (o)
             else
-                @mode = "default"
                 ranges = @editor.getSelectedBufferRanges()
                 for range in ranges
                     rowNums = rowNums.concat(range.getRows())
@@ -38,10 +37,16 @@ module.exports =
                         row   : row
                     @rows.push (o)
 
+                @mode = if @rows.length > 1 then "default" else "single"
+
+            if @mode != "cursor"
+                @rows.forEach (o) =>
+                    o.text = o.text.replace(/\s{2,}/g, ' ')
+
         # Private
         __computeRows: (startPos) =>
             max = 0
-            if @rows.length > 0 && @mode == "default"
+            if @mode == "default" || @mode == "single" || @mode == "break"
                 matched = null
                 idx = -1
                 @rows.forEach (o) =>
@@ -56,8 +61,25 @@ module.exports =
 
                         if matched
                             idx = line.indexOf(matched, startPos)
+                            if @mode == "break"
+                                c = ""
+                                blankPos = -1
+                                quotationMark = doubleQuotationMark = backslash = charFound = false
+                                loop
+                                    break if c == undefined
+                                    c = line[++idx]
+                                    quotationMark = if c == "'" and !quotationMark and !backslash then true else false
+                                    doubleQuotationMark = if c == "'" and !doubleQuotationMark and !backslash then true else false
+                                    backslash = if c == "\\" and !backslash then true else false
+                                    charFound = if c != " " and !charFound then true else charFound
+                                    if c == " " and !quotationMark and !doubleQuotationMark and charFound
+                                        blankPos = idx
+                                        break
+
+                                idx = blankPos
+
                             if (idx) isnt -1
-                                splitString = [line.substring(0,idx).replace(/\s+$/g, ''), line.substring(++idx)]
+                                splitString = [line.substring(0,idx), line.substring(++idx)]
                                 o.splited = splitString
                                 # Detection of max in this range
                                 max = if max < splitString[0].length then splitString[0].length else max
@@ -86,10 +108,15 @@ module.exports =
                             if diff > 0
                                 splitString[0] = splitString[0] + Array(diff).join(' ')
 
-                            if @trimRight
-                                splitString[1] = if addSpacePrefix then " "+splitString[1].trim() else splitString[1].trim()
+                            splitString[1] = if @addSpacePostfix && addSpacePrefix then " "+splitString[1].trim()
 
-                            o.text = splitString.join(matched)
+                            if @mode == "break"
+                                _.forEach splitString, (s, i) ->
+                                    splitString[i] = s.trim()
+
+                                o.text = splitString.join("\n")
+                            else
+                                o.text = splitString.join(matched)
                             o.done = o.stop
                         return
                 return max
@@ -101,22 +128,24 @@ module.exports =
 
                 @rows.forEach (o) =>
                     line = o.text
-                    splitString = [line.substring(0,o.column).replace(/\s+$/g, ''), line.substring(o.column)]
+                    splitString = [line.substring(0,o.column), line.substring(o.column)]
 
                     diff = max - splitString[0].length
 
                     if diff > 0
                         splitString[0] = splitString[0] + Array(diff).join(' ')
 
-                    if @trimRight
-                        splitString[1] = splitString[1][0]+splitString[1].substring(1).trim()
+                    splitString[1] = splitString[1].trim()
 
                     o.text = splitString.join("")
 
                 return 0
         # Public
         align: (multiple) =>
-            if multiple
+            if @mode == "single" && multiple
+                @mode = "break"
+
+            if multiple || @mode == "single"
                 found = 0
                 loop
                     found = @__computeRows(found)
