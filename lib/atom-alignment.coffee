@@ -17,7 +17,7 @@ module.exports =
         addSpacePostfix:
             type: 'boolean'
             default: false
-            description: "insert space after the matching character (a=1 > a =1)"
+            description: "insert space after the matching character (a=1 > a= 1)"
 
     activate: (state) ->
         atom.commands.add 'atom-workspace',
