@@ -67,7 +67,9 @@ module.exports =
 
                         if matched
                             idx = line.indexOf(matched, startPos)
+                            len = matched.length
                             if @mode == "break"
+                                idx += len-1
                                 c = ""
                                 blankPos = -1
                                 quotationMark = doubleQuotationMark = 0
@@ -85,8 +87,10 @@ module.exports =
 
                                 idx = blankPos
 
-                            if (idx) isnt -1
-                                splitString = [line.substring(0,idx), line.substring(++idx)]
+                            next = if @mode == "break" then 1 else len
+
+                            if idx isnt -1
+                                splitString  = [line.substring(0,idx), line.substring(idx+next)]
                                 o.splited = splitString
                                 # Detection of max in this range
                                 max = if max < splitString[0].length then splitString[0].length else max
@@ -94,7 +98,7 @@ module.exports =
                             found = false
                             @matcher.forEach (possibleMatcher) ->
                                 unless found
-                                    if (line.indexOf(possibleMatcher, idx+1) != -1)
+                                    if (line.indexOf(possibleMatcher, idx+len) != -1)
                                         found = true
                                 return
 
@@ -115,7 +119,7 @@ module.exports =
                             if diff > 0
                                 splitString[0] = splitString[0] + Array(diff).join(' ')
 
-                            splitString[1] = if @addSpacePostfix && addSpacePrefix then " "+splitString[1].trim()
+                            splitString[1] = " "+splitString[1].trim() if @addSpacePostfix && addSpacePrefix
 
                             if @mode == "break"
                                 _.forEach splitString, (s, i) ->
