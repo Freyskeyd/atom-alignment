@@ -7,6 +7,7 @@ module.exports =
         # Public
         constructor: (@editor, @spaceChars, @matcher, @addSpacePostfix) ->
             @rows = []
+            @alignments = []
 
         # Private
         __getRows: =>
@@ -50,23 +51,47 @@ module.exports =
                     else
                         o.text        = o.text.replace(/\s{2,}/g, ' ')
 
-        __computeRows: (startPos) =>
+        __getAllIndexes: (string, val, indexes) ->
+            found = []
+            i = 0
+            loop
+                i = string.indexOf(val, i)
+                if i != -1 && !_.some(indexes, {index:i})
+                    found.push({found:val,index:i})
+
+                break if i == -1
+                i++
+            return found
+
+        #generate the sequence of alignment characters computed from the first matching line
+        __generateAlignmentList: () =>
+            i = 0
+            _.forEach @rows, (o) =>
+                _.forEach @matcher, (possibleMatcher) =>
+                    @alignments = @alignments.concat (@__getAllIndexes o.text, possibleMatcher, @alignments)
+
+                if @alignments.length > 0
+                    return false # exit if we got all alignments characters in the row
+                else
+                    return true # continue
+            @alignments = @alignments.sort (a, b) -> a.index - b.index
+            @alignments = _.pluck @alignments, "found"
+            return
+
+        __computeRows: () =>
             max = 0
             if @mode == "default" || @mode == "single" || @mode == "break"
                 matched = null
                 idx = -1
+                possibleMatcher = @alignments.shift()
+                addSpacePrefix = @spaceChars.indexOf(possibleMatcher) > -1
                 @rows.forEach (o) =>
+                    o.splited = null
                     if !o.done
                         line = o.text
-                        unless matched
-                            @matcher.forEach (possibleMatcher) ->
-                                unless matched
-                                    if (line.indexOf(possibleMatcher, startPos) != -1)
-                                        matched = possibleMatcher
-                                return
-
-                        if matched
-                            idx = line.indexOf(matched, startPos)
+                        if (line.indexOf(possibleMatcher, o.nextPos) != -1)
+                            matched = possibleMatcher
+                            idx = line.indexOf(matched, o.nextPos)
                             len = matched.length
                             if @mode == "break"
                                 idx += len-1
@@ -92,23 +117,22 @@ module.exports =
                             if idx isnt -1
                                 splitString  = [line.substring(0,idx), line.substring(idx+next)]
                                 o.splited = splitString
-                                # Detection of max in this range
-                                max = if max < splitString[0].length then splitString[0].length else max
+                                if max < splitString[0].length
+                                    max = splitString[0].length
+                                    max++ if addSpacePrefix && splitString[0].charAt(splitString[0].length-1) != " "
 
-                            found = false
-                            @matcher.forEach (possibleMatcher) ->
-                                unless found
-                                    if (line.indexOf(possibleMatcher, idx+len) != -1)
-                                        found = true
-                                return
+                        found = false
+                        _.forEach @alignments, (nextPossibleMatcher) ->
+                            if (line.indexOf(nextPossibleMatcher, idx+len) != -1)
+                                found = true
+                                return false
 
-                            o.stop = !found
+                        o.stop = !found
 
                     return
 
-                if (max > 0)
-                    addSpacePrefix = @spaceChars.indexOf(matched) > -1
-                    max            = max + if addSpacePrefix then 2 else 1
+                if (max >= 0)
+                    max++ if max > 0
 
                     @rows.forEach (o) =>
                         if !o.done and o.splited and matched
@@ -129,8 +153,8 @@ module.exports =
                             else
                                 o.text = splitString.join(matched)
                             o.done = o.stop
+                            o.nextPos = splitString[0].length+matched.length
                         return
-                return max
             else
                 @rows.forEach (o) ->
                     max = if max < o.column then o.column else max
@@ -149,21 +173,23 @@ module.exports =
                     splitString[1] = splitString[1].trim()
 
                     o.text = splitString.join("")
+                    return
 
-                return 0
+            return @alignments.length > 0
+
         # Public
         align: (multiple) =>
             @__getRows()
+            @__generateAlignmentList()
             if @mode == "single" && multiple
                 @mode = "break"
 
             if multiple || @mode == "single"
-                found = 0
                 loop
-                    found = @__computeRows(found)
-                    break if found == 0
+                    cont = @__computeRows()
+                    break if not cont
             else
-                @__computeRows(0)
+                @__computeRows()
 
             @rows.forEach (o) =>
                 @editor.setTextInBufferRange([[o.row, 0],[o.row, o.length]], o.text)
