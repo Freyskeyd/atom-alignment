@@ -8,16 +8,19 @@ module.exports =
             items:
                 type: "string"
             description: "insert space in front of the character (a=1 > a =1)"
+            order: 2
         alignBy:
             type: 'array'
             default: [':=', ':', '=']
             items:
                 type: "string"
             description: "consider the order, the left most matching value is taken to compute the alignment"
+            order: 1
         addSpacePostfix:
             type: 'boolean'
             default: false
-            description: "insert space after the matching character (a=1 > a= 1)"
+            description: "insert space after the matching character (a=1 > a= 1) if character is part of the 'alignment space chars'"
+            order: 3
 
     activate: (state) ->
         atom.commands.add 'atom-workspace',
