@@ -117,9 +117,9 @@ module.exports =
                             if idx isnt -1
                                 splitString  = [line.substring(0,idx), line.substring(idx+next)]
                                 o.splited = splitString
-                                if max < splitString[0].length
+                                if max <= splitString[0].length
                                     max = splitString[0].length
-                                    max++ if addSpacePrefix && splitString[0].charAt(splitString[0].length-1) != " "
+                                    max++ if splitString[0].length > 0 && addSpacePrefix && splitString[0].charAt(splitString[0].length-1) != " "
 
                         found = false
                         _.forEach @alignments, (nextPossibleMatcher) ->
