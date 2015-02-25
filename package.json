@@ -3,13 +3,13 @@
   "main": "./lib/atom-alignment",
   "version": "0.9.3",
   "private": true,
-  "description": "A simple key-binding for aligning multi-line and multiple selections in Atom (Based on the sublime text plugin)",
-  "activationEvents": [
-    "atom-alignment:align"
-  ],
+  "description": "A simple key-binding for aligning multi-line and multiple selections in Atom (Based on the sublime text plugin)",    
   "repository": "https://github.com/Freyskeyd/atom-alignment",
   "license": "MIT",
   "engines": {
     "atom": ">0.50.0"
+  },
+  "dependencies": {
+   "lodash": "^2.4.1"
   }
 }
