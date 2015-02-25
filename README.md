@@ -8,9 +8,7 @@
 
 A simple key-binding for aligning multi-line, multi-cursor and multiple selections in Atom.
 
-Use `ctrl+cmd+a` on Mac or `ctrl+alt+a` to align all matches
-
-
+Use `ctrl+cmd+a` on Mac or `ctrl+alt+a` to align multiple matches. If you want to align the first match only, call `Atom Alignment:Align` from the command palette. The following examples all use the mentioned key binding to call `Atom Alignment:AlignMultiple`.
 
 ```javascript
 var a = b;
@@ -30,10 +28,10 @@ With more than one selection
 
 ```javascript
 var a = b;    /* selection 1 */
-var ab = c;   /*             */
+var ab = c;   /* selection 1 */
 var notMePlease='NOOOO';
 var abcd = d; /* selection 2 */
-var ddddd =d; /*             */
+var ddddd =d; /* selection 2 */
 ```
 
 ```javascript
@@ -55,18 +53,30 @@ var a = b
 var cde = d
 ```
 
-When working with multiple cursors, the different lines are aligned at the best matching cursor position.
+When working with multiple cursors, the different lines are aligned at the best matching cursor position. In the following example the | shows the cursor position.
+
+```javascript
+var a    =b var c|= d
+var e c|=   f var g = h
+var i c=j var k |= l
+```
+
+```javascript
+var a    =b var c = d
+var e c           = f var g = h
+var i c=j var k   = l
+```
 
 You can even align multiple matches
 
 ```javascript
-lets = see = what => happens
-a  = a  = b = c : d => e
+lets = see = what := happens
+a  = a  = b = c : d := e
 ```
 
 ```javascript
-lets = see = what      => happens
-a    = a   = b = c : d => e
+lets = see = what      := happens
+a    = a   = b = c : d := e
 ```
 
 ## License

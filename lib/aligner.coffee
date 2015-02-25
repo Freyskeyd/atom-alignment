@@ -12,7 +12,9 @@ module.exports =
         # Private
         __getRows: =>
             rowNums = []
+            allCursors = []
             cursors = _.filter @editor.getCursors(), (cursor) ->
+                allCursors.push(cursor)
                 row = cursor.getBufferRow()
                 if cursor.visible && !_.contains(rowNums, row)
                     rowNums.push(row)
@@ -28,6 +30,7 @@ module.exports =
                         row    : row
                         column : cursor.getBufferColumn()
                     @rows.push (o)
+
             else
                 ranges = @editor.getSelectedBufferRanges()
                 for range in ranges
@@ -41,15 +44,15 @@ module.exports =
                         row    : row
                     @rows.push (o)
 
-                @mode = if @rows.length > 1 then "default" else "single"
+                @mode = "align"
 
             if @mode != "cursor"
                 @rows.forEach (o) ->
                     if o.text[0] == " "
-                        firstCharPos  = o.text.length-o.text.trimLeft().length
-                        o.text        = Array(firstCharPos).join(" ")+" "+o.text.substring(firstCharPos).replace(/\s{2,}/g, ' ')
+                        firstCharPos = o.text.length-o.text.trimLeft().length
+                        o.text       = Array(firstCharPos).join(" ")+" "+o.text.substring(firstCharPos).replace(/\s{2,}/g, ' ')
                     else
-                        o.text        = o.text.replace(/\s{2,}/g, ' ')
+                        o.text       = o.text.replace(/\s{2,}/g, ' ')
 
         __getAllIndexes: (string, val, indexes) ->
             found = []
@@ -65,22 +68,32 @@ module.exports =
 
         #generate the sequence of alignment characters computed from the first matching line
         __generateAlignmentList: () =>
-            i = 0
-            _.forEach @rows, (o) =>
-                _.forEach @matcher, (possibleMatcher) =>
-                    @alignments = @alignments.concat (@__getAllIndexes o.text, possibleMatcher, @alignments)
+            if @mode == "cursor"
+                _.forEach @rows, (o) =>
+                    part = o.text.substring(o.column)
+                    _.forEach @spaceChars, (char) ->
+                        idx = part.indexOf(char)
+                        if idx == 0 && o.text.charAt(o.column) != " "
+                            o.addSpacePrefix = true
+                            o.spaceCharLength = char.length
+                            return false
+                    return
+            else
+                _.forEach @rows, (o) =>
+                    _.forEach @matcher, (possibleMatcher) =>
+                        @alignments = @alignments.concat (@__getAllIndexes o.text, possibleMatcher, @alignments)
 
-                if @alignments.length > 0
-                    return false # exit if we got all alignments characters in the row
-                else
-                    return true # continue
-            @alignments = @alignments.sort (a, b) -> a.index - b.index
-            @alignments = _.pluck @alignments, "found"
-            return
+                    if @alignments.length > 0
+                        return false # exit if we got all alignments characters in the row
+                    else
+                        return true # continue
+                @alignments = @alignments.sort (a, b) -> a.index - b.index
+                @alignments = _.pluck @alignments, "found"
+                return
 
         __computeRows: () =>
             max = 0
-            if @mode == "default" || @mode == "single" || @mode == "break"
+            if @mode == "align" || @mode == "break"
                 matched = null
                 idx = -1
                 possibleMatcher = @alignments.shift()
@@ -137,9 +150,7 @@ module.exports =
                     @rows.forEach (o) =>
                         if !o.done and o.splited and matched
                             splitString = o.splited
-
                             diff = max - splitString[0].length
-
                             if diff > 0
                                 splitString[0] = splitString[0] + Array(diff).join(' ')
 
@@ -155,36 +166,40 @@ module.exports =
                             o.done = o.stop
                             o.nextPos = splitString[0].length+matched.length
                         return
-            else
+                return @alignments.length > 0
+            else #cursor
                 @rows.forEach (o) ->
-                    max = if max < o.column then o.column else max
+                    if max <= o.column
+                        max = o.column
+                        part = o.text.substring(0,o.column)
+                        max++ if part.length > 0 && o.addSpacePrefix && part.charAt(part.length-1) != " "
+                    return
 
                 max++
 
-                @rows.forEach (o) ->
+                @rows.forEach (o) =>
                     line = o.text
                     splitString = [line.substring(0,o.column), line.substring(o.column)]
-
                     diff = max - splitString[0].length
-
                     if diff > 0
                         splitString[0] = splitString[0] + Array(diff).join(' ')
 
-                    splitString[1] = splitString[1].trim()
+                    splitString[1] = splitString[1].substring(0, o.spaceCharLength) + splitString[1].substr(o.spaceCharLength).trim()
+                    if @addSpacePostfix && o.addSpacePrefix
+                        splitString[1] = splitString[1].substring(0, o.spaceCharLength) + " " +splitString[1].substr(o.spaceCharLength)
 
                     o.text = splitString.join("")
                     return
-
-            return @alignments.length > 0
+                return false
 
         # Public
         align: (multiple) =>
             @__getRows()
             @__generateAlignmentList()
-            if @mode == "single" && multiple
+            if @rows.length == 1 && multiple
                 @mode = "break"
 
-            if multiple || @mode == "single"
+            if multiple || @mode == "break"
                 loop
                     cont = @__computeRows()
                     break if not cont
