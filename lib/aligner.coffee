@@ -184,6 +184,7 @@ module.exports =
                     if diff > 0
                         splitString[0] = splitString[0] + Array(diff).join(' ')
 
+                    o.spaceCharLength ?= 0
                     splitString[1] = splitString[1].substring(0, o.spaceCharLength) + splitString[1].substr(o.spaceCharLength).trim()
                     if @addSpacePostfix && o.addSpacePrefix
                         splitString[1] = splitString[1].substring(0, o.spaceCharLength) + " " +splitString[1].substr(o.spaceCharLength)
