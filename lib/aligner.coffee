@@ -48,11 +48,14 @@ module.exports =
 
             if @mode != "cursor"
                 @rows.forEach (o) ->
-                    if o.text[0] == " "
+                    if o.text.charAt(0) == " "
                         firstCharPos = o.text.length-o.text.trimLeft().length
                         o.text       = Array(firstCharPos).join(" ")+" "+o.text.substring(firstCharPos).replace(/\s{2,}/g, ' ')
                     else
-                        o.text       = o.text.replace(/\s{2,}/g, ' ')
+                        t = o.text.replace(/\s/g, '')
+                        if t.length > 0
+                            firstCharIdx = o.text.indexOf(t.charAt(0))
+                            o.text = o.text.substr(0,firstCharIdx) + o.text.substring(firstCharIdx).replace(/\ {2,}/g, ' ')
 
         __getAllIndexes: (string, val, indexes) ->
             found = []
