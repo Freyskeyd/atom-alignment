@@ -48,14 +48,10 @@ module.exports =
 
             if @mode != "cursor"
                 @rows.forEach (o) ->
-                    if o.text.charAt(0) == " "
-                        firstCharPos = o.text.length-o.text.trimLeft().length
-                        o.text       = Array(firstCharPos).join(" ")+" "+o.text.substring(firstCharPos).replace(/\s{2,}/g, ' ')
-                    else
-                        t = o.text.replace(/\s/g, '')
-                        if t.length > 0
-                            firstCharIdx = o.text.indexOf(t.charAt(0))
-                            o.text = o.text.substr(0,firstCharIdx) + o.text.substring(firstCharIdx).replace(/\ {2,}/g, ' ')
+                    t = o.text.replace(/\s/g, '')
+                    if t.length > 0
+                        firstCharIdx = o.text.indexOf(t.charAt(0))
+                        o.text = o.text.substr(0,firstCharIdx) + o.text.substring(firstCharIdx).replace(/\ {2,}/g, ' ')
 
         __getAllIndexes: (string, val, indexes) ->
             found = []
@@ -94,11 +90,25 @@ module.exports =
                 @alignments = _.pluck @alignments, "found"
                 return
 
+        __computeLength: (s) =>
+            diff = idx = tabs = 0
+            tabLength = @editor.getTabLength()
+            for char in s
+                if char == "\t"
+                    diff += tabLength - (idx % tabLength)
+                    idx += tabLength - (idx % tabLength)
+                    tabs++
+                else
+                    idx++
+
+            return s.length+diff-tabs
+
         __computeRows: () =>
             max = 0
             if @mode == "align" || @mode == "break"
                 matched = null
                 idx = -1
+                ##tabLength = @editor.getTabLength()
                 possibleMatcher = @alignments.shift()
                 addSpacePrefix = @spaceChars.indexOf(possibleMatcher) > -1
                 @rows.forEach (o) =>
@@ -108,6 +118,7 @@ module.exports =
                         if (line.indexOf(possibleMatcher, o.nextPos) != -1)
                             matched = possibleMatcher
                             idx = line.indexOf(matched, o.nextPos)
+                            tabCount = line.substring(o.nextPos, idx).split("\t").length - 1
                             len = matched.length
                             if @mode == "break"
                                 idx += len-1
@@ -133,9 +144,12 @@ module.exports =
                             if idx isnt -1
                                 splitString  = [line.substring(0,idx), line.substring(idx+next)]
                                 o.splited = splitString
-                                if max <= splitString[0].length
-                                    max = splitString[0].length
-                                    max++ if splitString[0].length > 0 && addSpacePrefix && splitString[0].charAt(splitString[0].length-1) != " "
+                                l = @__computeLength(splitString[0])
+                                #l = splitString[0].length
+
+                                if max <= l
+                                    max = l
+                                    max++ if l > 0 && addSpacePrefix && splitString[0].charAt(splitString[0].length-1) != " "
 
                         found = false
                         _.forEach @alignments, (nextPossibleMatcher) ->
@@ -153,7 +167,7 @@ module.exports =
                     @rows.forEach (o) =>
                         if !o.done and o.splited and matched
                             splitString = o.splited
-                            diff = max - splitString[0].length
+                            diff = max - @__computeLength(splitString[0])
                             if diff > 0
                                 splitString[0] = splitString[0] + Array(diff).join(' ')
 
