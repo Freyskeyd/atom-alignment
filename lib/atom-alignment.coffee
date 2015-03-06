@@ -4,14 +4,14 @@ module.exports =
     config:
         alignmentSpaceChars:
             type: 'array'
-            default: ['=', ':']
+            default: ['=>', ':=', '=']
             items:
                 type: "string"
             description: "insert space in front of the character (a=1 > a =1)"
             order: 2
         alignBy:
             type: 'array'
-            default: [':=', ':', '=']
+            default: ['=>', ':=', ':', '=']
             items:
                 type: "string"
             description: "consider the order, the left most matching value is taken to compute the alignment"
