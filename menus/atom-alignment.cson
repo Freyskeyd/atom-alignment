@@ -1,7 +1,6 @@
 # See https://atom.io/docs/latest/creating-a-package#menus for more details
 'context-menu':
-  '.overlayer':
-      'Enable atom-alignment': 'atom-alignment:align'
+  '.overlayer':[{'Enable atom-alignment': 'atom-alignment:align'}]
 
 'menu': [
   {
