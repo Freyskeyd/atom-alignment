@@ -6,6 +6,10 @@
   "description": "A simple key-binding for aligning multi-line and multiple selections in Atom (Based on the sublime text plugin)",
   "repository": "https://github.com/Freyskeyd/atom-alignment",
   "license": "MIT",
+  "activationCommands": {
+    "atom-workspace": ["atom-alignment:align", "atom-alignment:alignMultiple"]
+  },
+  }
   "engines": {
     "atom": ">0.50.0"
   },
