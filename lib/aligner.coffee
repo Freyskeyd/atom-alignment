@@ -2,12 +2,42 @@
 
 _ = require 'lodash'
 
+class Ignorelist
+    #public
+    constructor: (string, regexp) ->
+        @__ignoreList = []
+        if regexp?
+            while match = regexp.exec(string)
+                @__ignoreList.push {start:match.index, end:match.index + match[0].length}
+
+    contains: (matcher, idx) =>
+        found = false
+        _.forEach @__ignoreList, (ignore) ->
+            if ignore.start <= idx && ignore.end >= idx + matcher.length
+                found = true
+                return false
+
+        return found
+
+class SafeRegExp
+    #public
+    constructor: (parts) ->
+        _.each parts, (part, idx) ->
+            if part == "|"
+                parts[idx] = "\\"+part
+
+        @__regex = new RegExp(parts.join("|"), "g")
+
+    exec: (s) =>
+        @__regex.exec(s)
+
 module.exports =
     class Aligner
         # Public
-        constructor: (@editor, @spaceChars, @matcher, @addSpacePostfix) ->
+        constructor: (@editor, @leftSpaceChars, @rightSpaceChars, @matcher, @ignoreChars) ->
             @rows = []
             @alignments = []
+            @ignoreRegexp = new SafeRegExp(@ignoreChars) if @ignoreChars.length > 0
 
         # Private
         __getRows: =>
@@ -25,16 +55,17 @@ module.exports =
                 for cursor in cursors
                     row = cursor.getBufferRow()
                     t = @editor.lineTextForBufferRow(row)
-                    l = @__computeLength(t.substring(0,cursor.getBufferColumn()))
+                    v = cursor.getBufferColumn()
+                    l = @__computeLength(t.substring(0, v))
                     o =
                         text   : t
                         length : t.length
                         row    : row
                         column : l
-                        virtualColumn: cursor.getBufferColumn()
+                        virtualColumn: v
                     @rows.push (o)
-
             else
+                rowNums = []
                 ranges = @editor.getSelectedBufferRanges()
                 for range in ranges
                     rowNums = rowNums.concat(range.getRows())
@@ -56,41 +87,75 @@ module.exports =
                         firstCharIdx = o.text.indexOf(t.charAt(0))
                         o.text = o.text.substr(0,firstCharIdx) + o.text.substring(firstCharIdx).replace(/\ {2,}/g, ' ')
 
-        __getAllIndexes: (string, val, indexes) ->
-            found = []
-            i = 0
-            loop
-                i = string.indexOf(val, i)
-                if i != -1 && !_.some(indexes, {index:i})
-                    found.push({found:val,index:i})
+                    return
+            return
 
-                break if i == -1
-                i++
-            return found
+        __getAllIndexes: (string) =>
+            ignoreList = new Ignorelist string, @ignoreRegexp
+            allMatcherRegEx = new SafeRegExp(@matcher) if @matcher.length > 0
+            allMatcher = []
+            if allMatcherRegEx?
+                while match = allMatcherRegEx.exec(string)
+                    if !ignoreList.contains(match, match.index)
+                        allMatcher.push {matcher: match[0], start:match.index, end:match.index + match[0].length}
+
+            return allMatcher
+
+        __getNextMatcher: (start, matcher, text) =>
+            allMatcher = @__getAllIndexes(text)
+
+            canUseMatcher = (i) ->
+                found = false
+                _.forEach allMatcher, (m) ->
+                    if m.start == i && m.end == i + matcher.length && m.matcher == matcher
+                        found = true
+                        return false
+
+                return found
+
+            ret = -1
+            idx = text.indexOf matcher, start
+            while idx >= 0
+                if canUseMatcher idx
+                    ret = idx
+                    break
+                else
+                    start = idx + 1
+
+                idx = text.indexOf matcher, start
+
+            return ret
 
         #generate the sequence of alignment characters computed from the first matching line
         __generateAlignmentList: () =>
             if @mode == "cursor"
                 _.forEach @rows, (o) =>
                     part = o.text.substring(o.virtualColumn)
-                    _.forEach @spaceChars, (char) ->
+                    _.forEach @leftSpaceChars, (char) ->
                         idx = part.indexOf(char)
                         if idx == 0 && o.text.charAt(o.virtualColumn) != " "
-                            o.addSpacePrefix = true
-                            o.spaceCharLength = char.length
+                            o.leftSpace = true
+                            o.leftSpaceCharLength = char.length
                             return false
+
+                    _.forEach @rightSpaceChars, (char) ->
+                        idx = part.indexOf(char)
+                        if idx == 0 && o.text.charAt(o.virtualColumn)+char.length != " "
+                            o.rightSpace = true
+                            o.rightSpaceCharLength = char.length
+                            return false
+
                     return
             else
                 _.forEach @rows, (o) =>
-                    _.forEach @matcher, (possibleMatcher) =>
-                        @alignments = @alignments.concat (@__getAllIndexes o.text, possibleMatcher, @alignments)
+                    newAlignments = @__getAllIndexes(o.text)
 
-                    if @alignments.length > 0
-                        return false # exit if we got all alignments characters in the row
-                    else
-                        return true # continue
-                @alignments = @alignments.sort (a, b) -> a.index - b.index
-                @alignments = _.pluck @alignments, "found"
+                    if newAlignments.length > @alignments.length
+                        @alignments = newAlignments.slice()
+
+                @alignments = @alignments.sort (a, b) -> a.start - b.start
+                @alignments = _.pluck @alignments, "matcher"
+                console.log("atom-alignment: normal mode -> matcher: #{@alignments}")
                 return
 
         __computeLength: (s) =>
@@ -112,14 +177,15 @@ module.exports =
                 matched = null
                 idx = -1
                 possibleMatcher = @alignments.shift()
-                addSpacePrefix = @spaceChars.indexOf(possibleMatcher) > -1
+                leftSpace = @leftSpaceChars.indexOf(possibleMatcher) > -1
+                rightSpace = @rightSpaceChars.indexOf(possibleMatcher) > -1
                 @rows.forEach (o) =>
                     o.splited = null
                     if !o.done
                         line = o.text
-                        if (line.indexOf(possibleMatcher, o.nextPos) != -1)
+                        idx = @__getNextMatcher(o.nextPos, possibleMatcher, line)
+                        if (idx != -1)
                             matched = possibleMatcher
-                            idx = line.indexOf(matched, o.nextPos)
                             len = matched.length
                             if @mode == "break"
                                 idx += len-1
@@ -144,11 +210,13 @@ module.exports =
 
                             if idx isnt -1
                                 splitString  = [line.substring(0,idx), line.substring(idx+next)]
+                                splitString[0] = splitString[0].trimRight() if not leftSpace
+                                splitString[1] = splitString[1].trimLeft() if not rightSpace
                                 o.splited = splitString
                                 l = @__computeLength(splitString[0])
                                 if max <= l
                                     max = l
-                                    max++ if l > 0 && addSpacePrefix && splitString[0].charAt(splitString[0].length-1) != " "
+                                    max++ if l > 0 && leftSpace && splitString[0].charAt(splitString[0].length-1) != " "
 
                         found = false
                         _.forEach @alignments, (nextPossibleMatcher) ->
@@ -170,11 +238,12 @@ module.exports =
                             if diff > 0
                                 splitString[0] = splitString[0] + Array(diff).join(' ')
 
-                            splitString[1] = " "+splitString[1].trim() if @addSpacePostfix && addSpacePrefix
+                            splitString[1] = " "+splitString[1].trim() if rightSpace
 
                             if @mode == "break"
                                 _.forEach splitString, (s, i) ->
                                     splitString[i] = s.trim()
+                                    return
 
                                 o.text = splitString.join("\n")
                             else
@@ -188,7 +257,7 @@ module.exports =
                     if max <= o.column
                         max = o.column
                         part = o.text.substring(0,o.virtualColumn)
-                        max++ if part.length > 0 && o.addSpacePrefix && part.charAt(part.length-1) != " "
+                        max++ if part.length > 0 && o.leftSpace && part.charAt(part.length-1) != " "
                     return
 
                 max++
@@ -200,10 +269,11 @@ module.exports =
                     if diff > 0
                         splitString[0] = splitString[0] + Array(diff).join(' ')
 
-                    o.spaceCharLength ?= 0
-                    splitString[1] = splitString[1].substring(0, o.spaceCharLength) + splitString[1].substr(o.spaceCharLength).trim()
-                    if @addSpacePostfix && o.addSpacePrefix
-                        splitString[1] = splitString[1].substring(0, o.spaceCharLength) + " " +splitString[1].substr(o.spaceCharLength)
+                    o.leftSpaceCharLength ?= 0
+                    o.rightSpaceCharLength ?= 0
+                    splitString[1] = splitString[1].substring(0, o.leftSpaceCharLength) + splitString[1].substr(o.leftSpaceCharLength).trim()
+                    if o.rightSpace
+                        splitString[1] = splitString[1].substring(0, o.rightSpaceCharLength) + " " +splitString[1].substr(o.rightSpaceCharLength)
 
                     o.text = splitString.join("")
                     return
@@ -225,3 +295,4 @@ module.exports =
 
             @rows.forEach (o) =>
                 @editor.setTextInBufferRange([[o.row, 0],[o.row, o.length]], o.text)
+                return
