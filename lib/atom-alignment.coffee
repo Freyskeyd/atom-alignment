@@ -33,17 +33,17 @@ module.exports =
                 alignLinesMultiple editor
 
 alignLines = (editor) ->
-    spaceChars       = atom.config.get 'atom-alignment.alignmentSpaceChars'
-    matcher          = atom.config.get 'atom-alignment.alignBy'
-    addSpacePostfix  = atom.config.get 'atom-alignment.addSpacePostfix'
+    spaceChars       = atom.config.get('atom-alignment.alignmentSpaceChars', scope: editor.getRootScopeDescriptor())
+    matcher          = atom.config.get('atom-alignment.alignBy',             scope: editor.getRootScopeDescriptor())
+    addSpacePostfix  = atom.config.get('atom-alignment.addSpacePostfix',     scope: editor.getRootScopeDescriptor())
     a = new Aligner(editor, spaceChars, matcher, addSpacePostfix)
     a.align(false)
     return
 
 alignLinesMultiple = (editor) ->
-    spaceChars       = atom.config.get 'atom-alignment.alignmentSpaceChars'
-    matcher          = atom.config.get 'atom-alignment.alignBy'
-    addSpacePostfix  = atom.config.get 'atom-alignment.addSpacePostfix'
+    spaceChars       = atom.config.get('atom-alignment.alignmentSpaceChars', scope: editor.getRootScopeDescriptor())
+    matcher          = atom.config.get('atom-alignment.alignBy',             scope: editor.getRootScopeDescriptor())
+    addSpacePostfix  = atom.config.get('atom-alignment.addSpacePostfix',     scope: editor.getRootScopeDescriptor())
     a = new Aligner(editor, spaceChars, matcher, addSpacePostfix)
     a.align(true)
     return
