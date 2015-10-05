@@ -79,6 +79,10 @@ lets = see = what      := happens
 a    = a   = b = c : d := e
 ```
 
+## See it in action
+
+![atom-alignment](http://papermoon1978.github.io/atom-alignment.gif)
+
 ## License
 
 MIT © [Andre Lerche](https://github.com/papermoon1978)

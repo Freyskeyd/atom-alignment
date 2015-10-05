@@ -2,48 +2,49 @@ Aligner = require './aligner'
 
 module.exports =
     config:
-        alignmentSpaceChars:
-            type: 'array'
-            default: ['=>', ':=', '=']
-            items:
-                type: "string"
-            description: "insert space in front of the character (a=1 > a =1)"
-            order: 2
         alignBy:
             type: 'array'
             default: ['=>', ':=', ':', '=']
             items:
                 type: "string"
-            description: "consider the order, the left most matching value is taken to compute the alignment"
+            description: "consider the order, the left most matching separator is taken to compute the alignment"
             order: 1
-        addSpacePostfix:
-            type: 'boolean'
-            default: false
-            description: "insert space after the matching character (a=1 > a= 1) if character is part of the 'alignment space chars'"
+        leftSpaceChars:
+            type: 'array'
+            default: ['=>', ':=', '=']
+            items:
+                type: "string"
+            description: "insert space left of the separator (a=1 > a =1)"
+            order: 2
+        rightSpaceChars:
+            type: 'array'
+            default: ['=>', ':=', '=', ":"]
+            items:
+                type: "string"
+            description: "insert space right of the separator (a=1 > a= 1)"
             order: 3
+        ignoreChars:
+            type: 'array'
+            default: ['===', '!==', '==', '!=', '>=', '<=', '::']
+            items:
+                type: "string"
+            description: "ignore as separator"
+            order: 4
 
     activate: (state) ->
         atom.commands.add 'atom-workspace',
             'atom-alignment:align': ->
-                editor = atom.workspace.getActivePaneItem()
-                alignLines editor
+                alignLines false
 
             'atom-alignment:alignMultiple': ->
-                editor = atom.workspace.getActivePaneItem()
-                alignLinesMultiple editor
+                alignLines true
 
-alignLines = (editor) ->
-    spaceChars       = atom.config.get('atom-alignment.alignmentSpaceChars', scope: editor.getRootScopeDescriptor())
-    matcher          = atom.config.get('atom-alignment.alignBy',             scope: editor.getRootScopeDescriptor())
-    addSpacePostfix  = atom.config.get('atom-alignment.addSpacePostfix',     scope: editor.getRootScopeDescriptor())
-    a = new Aligner(editor, spaceChars, matcher, addSpacePostfix)
-    a.align(false)
-    return
-
-alignLinesMultiple = (editor) ->
-    spaceChars       = atom.config.get('atom-alignment.alignmentSpaceChars', scope: editor.getRootScopeDescriptor())
-    matcher          = atom.config.get('atom-alignment.alignBy',             scope: editor.getRootScopeDescriptor())
-    addSpacePostfix  = atom.config.get('atom-alignment.addSpacePostfix',     scope: editor.getRootScopeDescriptor())
-    a = new Aligner(editor, spaceChars, matcher, addSpacePostfix)
-    a.align(true)
+alignLines = (multiple) ->
+    editor          = atom.workspace.getActiveTextEditor()
+    leftSpaceChars  = atom.config.get('atom-alignment.leftSpaceChars',  scope: editor.getRootScopeDescriptor())
+    rightSpaceChars = atom.config.get('atom-alignment.rightSpaceChars', scope: editor.getRootScopeDescriptor())
+    matcher         = atom.config.get('atom-alignment.alignBy',         scope: editor.getRootScopeDescriptor())
+    ignoreChars     = atom.config.get('atom-alignment.ignoreChars',     scope: editor.getRootScopeDescriptor())
+    aligner         = new Aligner(editor, leftSpaceChars, rightSpaceChars, matcher, ignoreChars)
+    aligner.align(multiple)
     return
