@@ -237,12 +237,16 @@ module.exports =
                             diff = max - @__computeLength(splitString[0])
                             if diff > 0
                                 if matched in @leftAlignChars
-                                    splitString[1] = Array(diff).join(' ') + splitString[1]
+                                    splitString[1] = Array(diff).join(' ') + splitString[1].trim()
+                                    splitString[0] = splitString[0].trimRight()
                                 else
-                                    splitString[0] = splitString[0] + Array(diff).join(' ')
+                                    splitString[0] = splitString[0].trim() + Array(diff).join(' ')
+                                    splitString[1] = splitString[1].trimLeft()
 
-                            splitString[0] = splitString[0].trimRight()+" " if leftSpace
-                            splitString[1] = " "+splitString[1].trim() if rightSpace
+                            if leftSpace
+                                splitString[0] = splitString[0] + ' '
+                            if rightSpace
+                                splitString[1] = ' ' + splitString[1]
 
                             if @mode == "break"
                                 _.forEach splitString, (s, i) ->
