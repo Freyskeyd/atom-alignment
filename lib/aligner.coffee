@@ -241,10 +241,8 @@ module.exports =
                                 else
                                     splitString[0] = splitString[0] + Array(diff).join(' ')
 
-                            if matched in @leftAlignChars
-                                splitString[0] = splitString[0].trim()+" " if leftSpace
-                            else
-                                splitString[1] = " "+splitString[1].trim() if rightSpace
+                            splitString[0] = splitString[0].trimRight()+" " if leftSpace
+                            splitString[1] = " "+splitString[1].trim() if rightSpace
 
                             if @mode == "break"
                                 _.forEach splitString, (s, i) ->
