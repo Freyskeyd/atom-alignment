@@ -6,6 +6,7 @@ Aligner = require '../lib/aligner.coffee'
 # or `fdescribe`). Remove the `f` to unfocus the block.
 
 describe "atom-alignment", ->
+    leftAlignChars  = [':']
     leftSpaceChars  = ['=>', ':=', '=']
     rightSpaceChars = ['=>', ':=', '=', ':']
     matcher         = ['=>', ':=', ':', '=']
@@ -28,7 +29,7 @@ describe "atom-alignment", ->
         it "has to break the line", ->
             editor.setText "var a = 1; var b = 2;"
             editor.setCursorScreenPosition([1, 1])
-            new Aligner(editor, leftSpaceChars, rightSpaceChars, matcher, ignoreChars).align(true)
+            new Aligner(editor, leftAlignChars, leftSpaceChars, rightSpaceChars, matcher, ignoreChars).align(true)
             align ->
                 expect(editor.lineTextForBufferRow 1).toEqual "var b = 2;"
 
@@ -36,7 +37,7 @@ describe "atom-alignment", ->
         it "should align correctly", ->
             editor.setText "var a = 1;\nvar bbb =    2;"
             editor.selectAll()
-            new Aligner(editor, leftSpaceChars, rightSpaceChars, matcher, ignoreChars).align(true)
+            new Aligner(editor, leftAlignChars, leftSpaceChars, rightSpaceChars, matcher, ignoreChars).align(true)
             align ->
                 expect(editor.lineTextForBufferRow 1).toEqual "var bbb = 2;"
 
@@ -44,15 +45,15 @@ describe "atom-alignment", ->
         it "should align correctly", ->
             editor.setText "var a = 1; b:2; c:3;d=4\nvar bbb   : 2;"
             editor.selectAll()
-            new Aligner(editor, leftSpaceChars, rightSpaceChars, matcher, ignoreChars).align(true)
+            new Aligner(editor, leftAlignChars, leftSpaceChars, rightSpaceChars, matcher, ignoreChars).align(true)
             align ->
-                expect(editor.lineTextForBufferRow 1).toEqual "var bbb     : 2;"
+                expect(editor.lineTextForBufferRow 1).toEqual "var bbb:      2;"
 
     describe "when aligner is called on lines with multiple char matchers", ->
         it "should align correctly", ->
             editor.setText "var a => 1; b = 2;\nvar bbb   => 2;"
             editor.selectAll()
-            new Aligner(editor, leftSpaceChars, rightSpaceChars, matcher, ignoreChars).align(true)
+            new Aligner(editor, leftAlignChars, leftSpaceChars, rightSpaceChars, matcher, ignoreChars).align(true)
             align ->
                 expect(editor.lineTextForBufferRow 1).toEqual "var bbb => 2;"
 
@@ -60,15 +61,15 @@ describe "atom-alignment", ->
         it "should align correctly", ->
             editor.setText "a::a::a:1\nbbb::bbb=ccc:1"
             editor.selectAll()
-            new Aligner(editor, leftSpaceChars, rightSpaceChars, matcher, ignoreChars).align(true)
+            new Aligner(editor, leftAlignChars, leftSpaceChars, rightSpaceChars, matcher, ignoreChars).align(true)
             align ->
-                expect(editor.lineTextForBufferRow 0).toEqual "a::a::a       : 1"
+                expect(editor.lineTextForBufferRow 0).toEqual "a::a::a:         1"
 
     describe "when there is everything put together (1)", ->
         it "should align correctly", ->
             editor.setText "a::a=b=c=>d\naaaaa=b=>a\nfffffffffff=ffffffff=>h"
             editor.selectAll()
-            new Aligner(editor, leftSpaceChars, rightSpaceChars, matcher, ignoreChars).align(true)
+            new Aligner(editor, leftAlignChars, leftSpaceChars, rightSpaceChars, matcher, ignoreChars).align(true)
             align ->
                 expect(editor.lineTextForBufferRow 0).toEqual "a::a        = b = c    => d"
                 expect(editor.lineTextForBufferRow 1).toEqual "aaaaa       = b        => a"
@@ -78,7 +79,7 @@ describe "atom-alignment", ->
         it "should align correctly", ->
             editor.setText "a=b=>c\naa=bb=>cc\nb=>c=a\nbb=>cc=aa"
             editor.selectAll()
-            new Aligner(editor, leftSpaceChars, rightSpaceChars, matcher, ignoreChars).align(true)
+            new Aligner(editor, leftAlignChars, leftSpaceChars, rightSpaceChars, matcher, ignoreChars).align(true)
             align ->
                 expect(editor.lineTextForBufferRow 0).toEqual "a      = b  => c"
                 expect(editor.lineTextForBufferRow 1).toEqual "aa     = bb => cc"
@@ -89,7 +90,7 @@ describe "atom-alignment", ->
         it "should align correctly", ->
             editor.setText "aa = 4\na	= 1\nb  = 2\nc::3=4"
             editor.selectAll()
-            new Aligner(editor, leftSpaceChars, rightSpaceChars, matcher, ignoreChars).align(true)
+            new Aligner(editor, leftAlignChars, leftSpaceChars, rightSpaceChars, matcher, ignoreChars).align(true)
             align ->
                 expect(editor.lineTextForBufferRow 0).toEqual "aa   = 4"
                 expect(editor.lineTextForBufferRow(1).replace(/\t/g,"t")).toEqual "at   = 1" #specs cannot handle tabs  ... wtf?
@@ -100,7 +101,7 @@ describe "atom-alignment", ->
         it "should align correctly", ->
             editor.setText "a=1a     : 1\nb               = 2c::ab         :2"
             editor.selectAll()
-            new Aligner(editor, leftSpaceChars, rightSpaceChars, matcher, ignoreChars).align(true)
+            new Aligner(editor, leftAlignChars, leftSpaceChars, rightSpaceChars, matcher, ignoreChars).align(true)
             align ->
                 expect(editor.lineTextForBufferRow 0).toEqual "a = 1a    : 1"
                 expect(editor.lineTextForBufferRow 1).toEqual "b = 2c::ab: 2"
@@ -109,7 +110,7 @@ describe "atom-alignment", ->
         it "should align correctly", ->
             editor.setText "a = a   = b => c\na => a = b => c"
             editor.selectAll()
-            new Aligner(editor, leftSpaceChars, rightSpaceChars, matcher, ignoreChars).align(true)
+            new Aligner(editor, leftAlignChars, leftSpaceChars, rightSpaceChars, matcher, ignoreChars).align(true)
             align ->
                 expect(editor.lineTextForBufferRow 0).toEqual "a      = a = b => c"
                 expect(editor.lineTextForBufferRow 1).toEqual "a => a = b     => c"
@@ -118,7 +119,7 @@ describe "atom-alignment", ->
         it "should align correctly", ->
             editor.setText "a=a\n=c"
             editor.selectAll()
-            new Aligner(editor, leftSpaceChars, rightSpaceChars, matcher, ignoreChars).align(true)
+            new Aligner(editor, leftAlignChars, leftSpaceChars, rightSpaceChars, matcher, ignoreChars).align(true)
             align ->
                 expect(editor.lineTextForBufferRow 0).toEqual "a = a"
                 expect(editor.lineTextForBufferRow 1).toEqual "  = c"
@@ -127,7 +128,7 @@ describe "atom-alignment", ->
         it "should keep the intendation and remove duplicate blanks", ->
             editor.setText "  a::a::b  a\nb::b::c"
             editor.selectAll()
-            new Aligner(editor, leftSpaceChars, rightSpaceChars, matcher, ignoreChars).align(true)
+            new Aligner(editor, leftAlignChars, leftSpaceChars, rightSpaceChars, matcher, ignoreChars).align(true)
             align ->
                 expect(editor.lineTextForBufferRow 0).toEqual "  a::a::b a"
                 expect(editor.lineTextForBufferRow 1).toEqual "b::b::c"

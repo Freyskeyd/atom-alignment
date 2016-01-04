@@ -238,10 +238,10 @@ module.exports =
                             if diff > 0
                                 if matched in @leftAlignChars
                                     splitString[1] = Array(diff).join(' ') + splitString[1].trim()
-                                    splitString[0] = splitString[0].trimRight()
+                                    splitString[0] = splitString[0].trim()
                                 else
                                     splitString[0] = splitString[0].trim() + Array(diff).join(' ')
-                                    splitString[1] = splitString[1].trimLeft()
+                                    splitString[1] = splitString[1].trim()
 
                             if leftSpace
                                 splitString[0] = splitString[0] + ' '
