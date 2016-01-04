@@ -34,7 +34,7 @@ class SafeRegExp
 module.exports =
     class Aligner
         # Public
-        constructor: (@editor, @leftSpaceChars, @rightSpaceChars, @matcher, @ignoreChars) ->
+        constructor: (@editor, @leftAlignChars, @leftSpaceChars, @rightSpaceChars, @matcher, @ignoreChars) ->
             @rows = []
             @alignments = []
             @ignoreRegexp = new SafeRegExp(@ignoreChars) if @ignoreChars.length > 0
@@ -236,9 +236,15 @@ module.exports =
                             splitString = o.splited
                             diff = max - @__computeLength(splitString[0])
                             if diff > 0
-                                splitString[0] = splitString[0] + Array(diff).join(' ')
+                                if matched in @leftAlignChars
+                                    splitString[1] = Array(diff).join(' ') + splitString[1]
+                                else
+                                    splitString[0] = splitString[0] + Array(diff).join(' ')
 
-                            splitString[1] = " "+splitString[1].trim() if rightSpace
+                            if matched in @leftAlignChars
+                                splitString[0] = splitString[0].trim()+" " if leftSpace
+                            else
+                                splitString[1] = " "+splitString[1].trim() if rightSpace
 
                             if @mode == "break"
                                 _.forEach splitString, (s, i) ->
