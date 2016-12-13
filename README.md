@@ -1,5 +1,11 @@
 # atom-alignment package
 
+# THIS REPOSITORY NEED A NEW MAINTAINER
+
+I don't use atom for a while... like 2years and i don't have time to maintain this repository.
+If someone wants to be involved, just drop me an email.
+
+
 [Atom package](https://atom.io/packages/atom-alignment)
 
 > Inspired by sublime text plugin ([sublime_alignment](https://github.com/wbond/sublime_alignment))
