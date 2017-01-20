@@ -223,5 +223,7 @@ module.exports =
             else
                 @__computeRows()
 
+            checkpoint = @editor.createCheckpoint()
             @rows.forEach (o) =>
                 @editor.setTextInBufferRange([[o.row, 0],[o.row, o.length]], o.text)
+            @editor.groupChangesSinceCheckpoint(checkpoint)
