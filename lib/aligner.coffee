@@ -31,6 +31,7 @@ module.exports =
                         length : t.length
                         row    : row
                         column : l
+                        cursor : cursor
                         virtualColumn: cursor.getBufferColumn()
                     @rows.push (o)
 
@@ -226,4 +227,6 @@ module.exports =
             checkpoint = @editor.createCheckpoint()
             @rows.forEach (o) =>
                 @editor.setTextInBufferRange([[o.row, 0],[o.row, o.length]], o.text)
+                if o.cursor
+                    o.cursor.setBufferPosition([o.row, o.virtualColumn + (o.text.length - o.length)])
             @editor.groupChangesSinceCheckpoint(checkpoint)
