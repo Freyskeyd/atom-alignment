@@ -38,7 +38,10 @@ module.exports =
             else
                 ranges = @editor.getSelectedBufferRanges()
                 for range in ranges
-                    rowNums = rowNums.concat(range.getRows())
+                    rowNums = rowNums.concat(
+                        _.filter range.getRows(), (rangeRow) ->
+                            return !rowNums.includes(rangeRow)
+                    )
                     rowNums.pop() if range.end.column == 0
 
                 for row in rowNums

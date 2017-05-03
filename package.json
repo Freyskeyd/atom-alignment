@@ -9,7 +9,6 @@
   "activationCommands": {
     "atom-workspace": ["atom-alignment:align", "atom-alignment:alignMultiple"]
   },
-  }
   "engines": {
     "atom": ">0.50.0"
   },
