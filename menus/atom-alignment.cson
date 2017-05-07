@@ -6,7 +6,7 @@
   {
     'label': 'Packages'
     'submenu': [
-      'label': 'atom-alignment'
+      'label': 'Atom Alignment'
       'submenu': [
         { 'label': 'Align', 'command': 'atom-alignment:align' },
         { 'label': 'Align Multiple', 'command': 'atom-alignment:alignMultiple' }
