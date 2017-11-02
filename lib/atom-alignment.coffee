@@ -23,7 +23,7 @@ module.exports =
             order: 3
 
     activate: (state) ->
-        atom.commands.add 'atom-workspace',
+        atom.commands.add 'atom-text-editor',
             'atom-alignment:align': ->
                 editor = atom.workspace.getActivePaneItem()
                 alignLines editor
